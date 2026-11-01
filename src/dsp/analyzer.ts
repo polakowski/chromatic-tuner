@@ -31,7 +31,9 @@ export interface AnalysisResult {
   rms: number;
 }
 
-const DEFAULT_MIN_FREQUENCY = 30;
+// 27 Hz mieści B0 basu pięciostrunowego (30,87 Hz przy A=440) nawet przy
+// stroju obniżonym do A=390, gdzie ta struna schodzi do ~27,4 Hz.
+const DEFAULT_MIN_FREQUENCY = 27;
 const DEFAULT_MAX_FREQUENCY = 2000;
 const DEFAULT_FRAME_SIZE = 4096;
 const DEFAULT_RMS_THRESHOLD = 0.004;
