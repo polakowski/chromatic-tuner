@@ -16,8 +16,11 @@ import {
   normalizeReferenceA,
   REFERENCE_A_PRESETS,
   useSettings,
+  type Indicator,
   type Sensitivity,
 } from '../state/settings';
+import type { Accidental } from '../music/notes';
+import { Segmented, type SegmentedOption } from './Segmented';
 import { colors, spacing } from './theme';
 
 interface SettingsSheetProps {
@@ -25,10 +28,20 @@ interface SettingsSheetProps {
   onClose: () => void;
 }
 
-const SENSITIVITY_OPTIONS: { value: Sensitivity; label: string }[] = [
+const SENSITIVITY_OPTIONS: SegmentedOption<Sensitivity>[] = [
   { value: 'low', label: 'Low' },
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
+];
+
+const INDICATOR_OPTIONS: SegmentedOption<Indicator>[] = [
+  { value: 'bar', label: 'Cents bar' },
+  { value: 'strobe', label: 'Strobe' },
+];
+
+const ACCIDENTAL_OPTIONS: SegmentedOption<Accidental>[] = [
+  { value: 'sharp', label: 'Sharps ♯' },
+  { value: 'flat', label: 'Flats ♭' },
 ];
 
 const STEPS = [-1, -0.1, 0.1, 1];
@@ -42,11 +55,13 @@ export function SettingsSheet({ visible, onClose }: SettingsSheetProps) {
   const referenceA = useSettings((state) => state.referenceA);
   const accidental = useSettings((state) => state.accidental);
   const sensitivity = useSettings((state) => state.sensitivity);
+  const indicator = useSettings((state) => state.indicator);
   const setReferenceA = useSettings((state) => state.setReferenceA);
   const adjustReferenceA = useSettings((state) => state.adjustReferenceA);
   const resetReferenceA = useSettings((state) => state.resetReferenceA);
   const setAccidental = useSettings((state) => state.setAccidental);
   const setSensitivity = useSettings((state) => state.setSensitivity);
+  const setIndicator = useSettings((state) => state.setIndicator);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -116,44 +131,29 @@ export function SettingsSheet({ visible, onClose }: SettingsSheetProps) {
               </Pressable>
             )}
 
+            <Text style={styles.sectionLabel}>Indicator</Text>
+            <Segmented
+              options={INDICATOR_OPTIONS}
+              value={indicator}
+              onChange={setIndicator}
+              accessibilityLabel="Indicator style"
+            />
+
             <Text style={styles.sectionLabel}>Notation</Text>
-            <View style={styles.segmented}>
-              {(['sharp', 'flat'] as const).map((option) => (
-                <Pressable
-                  key={option}
-                  style={[styles.segment, accidental === option && styles.segmentSelected]}
-                  onPress={() => setAccidental(option)}
-                  accessibilityRole="button"
-                >
-                  <Text
-                    style={[styles.segmentText, accidental === option && styles.segmentTextSelected]}
-                  >
-                    {option === 'sharp' ? 'Sharps ♯' : 'Flats ♭'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <Segmented
+              options={ACCIDENTAL_OPTIONS}
+              value={accidental}
+              onChange={setAccidental}
+              accessibilityLabel="Notation"
+            />
 
             <Text style={styles.sectionLabel}>Microphone sensitivity</Text>
-            <View style={styles.segmented}>
-              {SENSITIVITY_OPTIONS.map((option) => (
-                <Pressable
-                  key={option.value}
-                  style={[styles.segment, sensitivity === option.value && styles.segmentSelected]}
-                  onPress={() => setSensitivity(option.value)}
-                  accessibilityRole="button"
-                >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      sensitivity === option.value && styles.segmentTextSelected,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <Segmented
+              options={SENSITIVITY_OPTIONS}
+              value={sensitivity}
+              onChange={setSensitivity}
+              accessibilityLabel="Microphone sensitivity"
+            />
           </ScrollView>
         </View>
       </View>
@@ -320,29 +320,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 14,
     color: colors.accent,
-  },
-  segmented: {
-    flexDirection: 'row',
-    padding: 3,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceRaised,
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  segmentSelected: {
-    backgroundColor: colors.border,
-  },
-  segmentText: {
-    fontSize: 15,
-    color: colors.textMuted,
-  },
-  segmentTextSelected: {
-    color: colors.text,
-    fontWeight: '600',
   },
   pressed: {
     opacity: 0.6,

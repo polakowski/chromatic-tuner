@@ -5,6 +5,7 @@ import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useTuner } from '../audio/useTuner';
 import { useSettings } from '../state/settings';
 import { CentsBar } from './CentsBar';
+import { StrobeDisplay } from './StrobeDisplay';
 import { LevelMeter } from './LevelMeter';
 import { NoteDisplay } from './NoteDisplay';
 import { SettingsSheet } from './SettingsSheet';
@@ -14,6 +15,7 @@ export function TunerScreen() {
   const { reading, deviation, hasPitch, permission, status, error, requestPermission, start } =
     useTuner();
   const referenceA = useSettings((state) => state.referenceA);
+  const indicator = useSettings((state) => state.indicator);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   // Na web pierwsze uruchomienie AudioContext wymaga gestu użytkownika.
@@ -58,8 +60,12 @@ export function TunerScreen() {
         {(permission === 'pending' || (permission === 'granted' && !needsGesture)) && (
           <>
             <NoteDisplay reading={reading} />
-            <View style={styles.barWrapper}>
-              <CentsBar deviation={deviation} hasPitch={hasPitch} />
+            <View style={styles.indicatorWrapper}>
+              {indicator === 'strobe' ? (
+                <StrobeDisplay deviation={deviation} hasPitch={hasPitch} />
+              ) : (
+                <CentsBar deviation={deviation} hasPitch={hasPitch} />
+              )}
             </View>
           </>
         )}
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
-  barWrapper: {
+  indicatorWrapper: {
     marginTop: spacing.xl,
   },
   footer: {

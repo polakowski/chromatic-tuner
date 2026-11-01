@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import { CENTS_RANGE, colors, IN_TUNE_CENTS, NEAR_TUNE_CENTS, spacing } from './theme';
+import { CENTS_RANGE, colors, IN_TUNE_CENTS, spacing, toneColorInterpolation } from './theme';
 
 const TICK_STEP = 10;
 const INDICATOR_WIDTH = 4;
@@ -28,35 +28,7 @@ export function CentsBar({ deviation, hasPitch }: CentsBarProps) {
     extrapolate: 'clamp',
   });
 
-  // Skokowe progi, a nie gradient — żeby kolor paska zgadzał się z kolorem nuty
-  // (patrz toneColor): zielony = nastrojone, bursztynowy = blisko, czerwony = nie.
-  const indicatorColor = deviation.interpolate({
-    inputRange: [
-      -CENTS_RANGE,
-      -NEAR_TUNE_CENTS - 0.01,
-      -NEAR_TUNE_CENTS,
-      -IN_TUNE_CENTS - 0.01,
-      -IN_TUNE_CENTS,
-      IN_TUNE_CENTS,
-      IN_TUNE_CENTS + 0.01,
-      NEAR_TUNE_CENTS,
-      NEAR_TUNE_CENTS + 0.01,
-      CENTS_RANGE,
-    ],
-    outputRange: [
-      colors.offTune,
-      colors.offTune,
-      colors.nearTune,
-      colors.nearTune,
-      colors.inTune,
-      colors.inTune,
-      colors.nearTune,
-      colors.nearTune,
-      colors.offTune,
-      colors.offTune,
-    ],
-    extrapolate: 'clamp',
-  });
+  const indicatorColor = deviation.interpolate(toneColorInterpolation());
 
   const ticks = [];
   for (let cents = -CENTS_RANGE; cents <= CENTS_RANGE; cents += TICK_STEP) {

@@ -36,3 +36,38 @@ export function toneColor(cents: number): string {
   }
   return colors.offTune;
 }
+
+/**
+ * Progi kolorów jako argumenty dla `Animated.Value.interpolate` — skokowe,
+ * nie gradient, żeby animowany wskaźnik pokazywał ten sam kolor co
+ * {@link toneColor} użyty w zwykłym renderze.
+ */
+export function toneColorInterpolation() {
+  return {
+    inputRange: [
+      -CENTS_RANGE,
+      -NEAR_TUNE_CENTS - 0.01,
+      -NEAR_TUNE_CENTS,
+      -IN_TUNE_CENTS - 0.01,
+      -IN_TUNE_CENTS,
+      IN_TUNE_CENTS,
+      IN_TUNE_CENTS + 0.01,
+      NEAR_TUNE_CENTS,
+      NEAR_TUNE_CENTS + 0.01,
+      CENTS_RANGE,
+    ],
+    outputRange: [
+      colors.offTune,
+      colors.offTune,
+      colors.nearTune,
+      colors.nearTune,
+      colors.inTune,
+      colors.inTune,
+      colors.nearTune,
+      colors.nearTune,
+      colors.offTune,
+      colors.offTune,
+    ],
+    extrapolate: 'clamp' as const,
+  };
+}
