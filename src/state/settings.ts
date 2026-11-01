@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { Accidental } from '../music/notes';
+import { CHROMATIC_ID } from '../music/tunings';
 
 export const MIN_REFERENCE_A = 390;
 export const MAX_REFERENCE_A = 500;
@@ -27,12 +28,18 @@ interface SettingsState {
   accidental: Accidental;
   sensitivity: Sensitivity;
   indicator: Indicator;
+  /** Id of the active tuning, or CHROMATIC_ID for free chromatic mode. */
+  tuningId: string;
+  /** Index of a string the user pinned, or null to follow the nearest one. */
+  lockedString: number | null;
   setReferenceA: (value: number) => void;
   adjustReferenceA: (delta: number) => void;
   resetReferenceA: () => void;
   setAccidental: (value: Accidental) => void;
   setSensitivity: (value: Sensitivity) => void;
   setIndicator: (value: Indicator) => void;
+  setTuning: (id: string) => void;
+  toggleLockedString: (index: number) => void;
 }
 
 /** Clamps to the supported range and quantizes to 0.1 Hz. */
@@ -51,12 +58,18 @@ export const useSettings = create<SettingsState>()(
       accidental: 'sharp',
       sensitivity: 'medium',
       indicator: 'bar',
+      tuningId: CHROMATIC_ID,
+      lockedString: null,
       setReferenceA: (value) => set({ referenceA: normalizeReferenceA(value) }),
       adjustReferenceA: (delta) => set({ referenceA: normalizeReferenceA(get().referenceA + delta) }),
       resetReferenceA: () => set({ referenceA: DEFAULT_REFERENCE_A }),
       setAccidental: (accidental) => set({ accidental }),
       setSensitivity: (sensitivity) => set({ sensitivity }),
       setIndicator: (indicator) => set({ indicator }),
+      // Zmiana stroju unieważnia przypięcie — indeks wskazywałby inną strunę.
+      setTuning: (tuningId) => set({ tuningId, lockedString: null }),
+      toggleLockedString: (index) =>
+        set({ lockedString: get().lockedString === index ? null : index }),
     }),
     {
       name: 'chromatic-tuner-settings',

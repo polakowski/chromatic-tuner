@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import { useTuner } from '../audio/useTuner';
+import { findTuning } from '../music/tunings';
 import { useSettings } from '../state/settings';
 import { CentsBar } from './CentsBar';
+import { StringRow } from './StringRow';
 import { StrobeDisplay } from './StrobeDisplay';
 import { LevelMeter } from './LevelMeter';
 import { NoteDisplay } from './NoteDisplay';
@@ -16,6 +18,8 @@ export function TunerScreen() {
     useTuner();
   const referenceA = useSettings((state) => state.referenceA);
   const indicator = useSettings((state) => state.indicator);
+  const tuningId = useSettings((state) => state.tuningId);
+  const tuning = findTuning(tuningId);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   // Na web pierwsze uruchomienie AudioContext wymaga gestu użytkownika.
@@ -27,14 +31,23 @@ export function TunerScreen() {
 
       <View style={styles.header}>
         <Pressable
-          style={({ pressed }) => [styles.referenceChip, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+          onPress={() => setSettingsVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Tuning: ${tuning ? tuning.name : 'Chromatic'}. Open settings.`}
+        >
+          <Text style={styles.chipValue}>{tuning ? tuning.name : 'Chromatic'}</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
           onPress={() => setSettingsVisible(true)}
           accessibilityRole="button"
           accessibilityLabel={`Reference A is ${referenceA} hertz. Open settings.`}
         >
-          <Text style={styles.referenceLabel}>A</Text>
-          <Text style={styles.referenceValue}>{referenceA.toFixed(1)}</Text>
-          <Text style={styles.referenceUnit}>Hz</Text>
+          <Text style={styles.chipLabel}>A</Text>
+          <Text style={styles.chipValue}>{referenceA.toFixed(1)}</Text>
+          <Text style={styles.chipUnit}>Hz</Text>
         </Pressable>
       </View>
 
@@ -67,6 +80,16 @@ export function TunerScreen() {
                 <CentsBar deviation={deviation} hasPitch={hasPitch} />
               )}
             </View>
+
+            {tuning && (
+              <View style={styles.stringsWrapper}>
+                <StringRow
+                  tuning={tuning}
+                  activeIndex={reading.stringIndex}
+                  cents={reading.cents}
+                />
+              </View>
+            )}
           </>
         )}
       </View>
@@ -110,11 +133,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
   },
-  referenceChip: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: spacing.xs,
@@ -125,18 +150,18 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
   },
-  referenceLabel: {
+  chipLabel: {
     fontSize: 13,
     fontWeight: '700',
     color: colors.textMuted,
   },
-  referenceValue: {
+  chipValue: {
     fontSize: 17,
     fontWeight: '600',
     color: colors.text,
     fontVariant: ['tabular-nums'],
   },
-  referenceUnit: {
+  chipUnit: {
     fontSize: 12,
     color: colors.textMuted,
   },
@@ -151,6 +176,9 @@ const styles = StyleSheet.create({
   },
   indicatorWrapper: {
     marginTop: spacing.xl,
+  },
+  stringsWrapper: {
+    marginTop: spacing.lg,
   },
   footer: {
     height: 48,

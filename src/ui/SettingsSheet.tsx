@@ -20,6 +20,7 @@ import {
   type Sensitivity,
 } from '../state/settings';
 import type { Accidental } from '../music/notes';
+import { CHROMATIC_ID, TUNINGS } from '../music/tunings';
 import { Segmented, type SegmentedOption } from './Segmented';
 import { colors, spacing } from './theme';
 
@@ -56,12 +57,14 @@ export function SettingsSheet({ visible, onClose }: SettingsSheetProps) {
   const accidental = useSettings((state) => state.accidental);
   const sensitivity = useSettings((state) => state.sensitivity);
   const indicator = useSettings((state) => state.indicator);
+  const tuningId = useSettings((state) => state.tuningId);
   const setReferenceA = useSettings((state) => state.setReferenceA);
   const adjustReferenceA = useSettings((state) => state.adjustReferenceA);
   const resetReferenceA = useSettings((state) => state.resetReferenceA);
   const setAccidental = useSettings((state) => state.setAccidental);
   const setSensitivity = useSettings((state) => state.setSensitivity);
   const setIndicator = useSettings((state) => state.setIndicator);
+  const setTuning = useSettings((state) => state.setTuning);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -75,6 +78,34 @@ export function SettingsSheet({ visible, onClose }: SettingsSheetProps) {
           </View>
 
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+            <Text style={styles.sectionLabel}>Tuning</Text>
+            <View style={styles.presetRow}>
+              {[{ id: CHROMATIC_ID, name: 'Chromatic' }, ...TUNINGS].map((option) => {
+                const selected = option.id === tuningId;
+                return (
+                  <Pressable
+                    key={option.id}
+                    style={({ pressed }) => [
+                      styles.preset,
+                      selected && styles.presetSelected,
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={() => setTuning(option.id)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                  >
+                    <Text style={[styles.presetText, selected && styles.presetTextSelected]}>
+                      {option.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.hint}>
+              An instrument tuning measures against its strings, so a badly flat string still reads
+              as that string.
+            </Text>
+
             <Text style={styles.sectionLabel}>Reference A</Text>
             <View style={styles.referenceRow}>
               <ReferenceInput

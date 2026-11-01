@@ -21,6 +21,7 @@ function stableFrequency(results: AnalysisResult[]): number {
 
 describe('PitchAnalyzer', () => {
   const cases: { label: string; frequency: number }[] = [
+    { label: 'A0 (bottom of the detectable range)', frequency: 27.5 },
     { label: 'B0 (low 5-string bass)', frequency: 30.87 },
     { label: 'E1 (bass low E)', frequency: 41.2 },
     { label: 'E2 (guitar low E)', frequency: 82.41 },
@@ -57,6 +58,19 @@ describe('PitchAnalyzer', () => {
     });
     const detected = stableFrequency(detect(signal));
     expect(Math.abs(centsBetween(detected, 196))).toBeLessThan(5);
+  });
+
+  it('tracks a 5-string bass B0 dropped to a 390 Hz reference', () => {
+    // 30,87 Hz * 390/440 — najniższa nuta, jaką apka musi złapać.
+    const frequency = 27.36;
+    const signal = generateTone({
+      frequency,
+      sampleRate: SAMPLE_RATE,
+      durationSeconds: 0.8,
+      harmonics: [0.5, 1, 0.8, 0.4],
+    });
+    const detected = stableFrequency(detect(signal));
+    expect(Math.abs(centsBetween(detected, frequency))).toBeLessThan(3);
   });
 
   it('reports silence as no pitch', () => {
