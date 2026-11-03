@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
+import { useStrings } from '../i18n/useStrings';
 import { advancePhase, BAND_MULTIPLIERS } from './strobePhase';
 import { colors, spacing, toneColorInterpolation } from './theme';
 
@@ -26,6 +27,7 @@ interface StrobeDisplayProps {
 export function StrobeDisplay({ deviation, hasPitch }: StrobeDisplayProps) {
   const [width, setWidth] = useState(0);
   const [offsets] = useState(() => BAND_MULTIPLIERS.map(() => new Animated.Value(0)));
+  const t = useStrings();
 
   const centsRef = useRef(0);
   const phaseRef = useRef(0);
@@ -89,9 +91,9 @@ export function StrobeDisplay({ deviation, hasPitch }: StrobeDisplayProps) {
       ))}
 
       <View style={styles.legend}>
-        <Text style={styles.legendText}>♭ flat</Text>
-        <Text style={styles.legendHint}>still = in tune</Text>
-        <Text style={styles.legendText}>sharp ♯</Text>
+        <Text style={styles.legendText}>{t.tuner.strobeFlat}</Text>
+        <Text style={styles.legendHint}>{t.tuner.strobeStill}</Text>
+        <Text style={styles.legendText}>{t.tuner.strobeSharp}</Text>
       </View>
     </View>
   );

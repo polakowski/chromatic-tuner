@@ -5,9 +5,20 @@ import { describeNote, type Accidental, type NoteName } from './notes';
  * niezależnie od stroju A — przeliczenie na herce robi `midiToFrequency`,
  * więc zmiana referencji przesuwa cały instrument razem ze skalą.
  */
+/** Union, nie `string` — dzięki temu brak tłumaczenia nazwy jest błędem kompilacji. */
+export type TuningId =
+  | 'guitar-standard'
+  | 'guitar-drop-d'
+  | 'guitar-eb'
+  | 'guitar-d'
+  | 'guitar-seven'
+  | 'guitar-open-em'
+  | 'guitar-open-g'
+  | 'bass-four'
+  | 'bass-five';
+
 export interface Tuning {
-  id: string;
-  name: string;
+  id: TuningId;
   instrument: 'guitar' | 'bass';
   /** MIDI note numbers, lowest string first. */
   strings: number[];
@@ -17,15 +28,15 @@ export interface Tuning {
 export const CHROMATIC_ID = 'chromatic';
 
 export const TUNINGS: Tuning[] = [
-  { id: 'guitar-standard', name: 'Guitar standard', instrument: 'guitar', strings: [40, 45, 50, 55, 59, 64] },
-  { id: 'guitar-drop-d', name: 'Drop D', instrument: 'guitar', strings: [38, 45, 50, 55, 59, 64] },
-  { id: 'guitar-eb', name: 'E♭ standard', instrument: 'guitar', strings: [39, 44, 49, 54, 58, 63] },
-  { id: 'guitar-d', name: 'D standard', instrument: 'guitar', strings: [38, 43, 48, 53, 57, 62] },
-  { id: 'guitar-seven', name: '7-string', instrument: 'guitar', strings: [35, 40, 45, 50, 55, 59, 64] },
-  { id: 'guitar-open-em', name: 'Open Em', instrument: 'guitar', strings: [40, 47, 52, 55, 59, 64] },
-  { id: 'guitar-open-g', name: 'Open G', instrument: 'guitar', strings: [38, 43, 50, 55, 59, 62] },
-  { id: 'bass-four', name: 'Bass 4-string', instrument: 'bass', strings: [28, 33, 38, 43] },
-  { id: 'bass-five', name: 'Bass 5-string', instrument: 'bass', strings: [23, 28, 33, 38, 43] },
+  { id: 'guitar-standard', instrument: 'guitar', strings: [40, 45, 50, 55, 59, 64] },
+  { id: 'guitar-drop-d', instrument: 'guitar', strings: [38, 45, 50, 55, 59, 64] },
+  { id: 'guitar-eb', instrument: 'guitar', strings: [39, 44, 49, 54, 58, 63] },
+  { id: 'guitar-d', instrument: 'guitar', strings: [38, 43, 48, 53, 57, 62] },
+  { id: 'guitar-seven', instrument: 'guitar', strings: [35, 40, 45, 50, 55, 59, 64] },
+  { id: 'guitar-open-em', instrument: 'guitar', strings: [40, 47, 52, 55, 59, 64] },
+  { id: 'guitar-open-g', instrument: 'guitar', strings: [38, 43, 50, 55, 59, 62] },
+  { id: 'bass-four', instrument: 'bass', strings: [28, 33, 38, 43] },
+  { id: 'bass-five', instrument: 'bass', strings: [23, 28, 33, 38, 43] },
 ];
 
 /** Returns the tuning with this id, or null for chromatic mode / an unknown id. */

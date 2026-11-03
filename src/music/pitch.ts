@@ -27,3 +27,13 @@ export function frequencyToPitch(frequency: number, referenceA: number): PitchRe
 export function pitchToFrequency(exactMidi: number, referenceA: number): number {
   return referenceA * Math.pow(2, (exactMidi - A4_MIDI) / 12);
 }
+
+/**
+ * Odchyłka częstotliwości od konkretnej nuty MIDI, w centach.
+ *
+ * W odróżnieniu od {@link frequencyToPitch} nie zawęża się do ±50 centów —
+ * cel jest narzucony z zewnątrz, więc wynik może być dowolnie duży.
+ */
+export function centsFromTarget(frequency: number, targetMidi: number, referenceA: number): number {
+  return (frequencyToPitch(frequency, referenceA).exactMidi - targetMidi) * 100;
+}

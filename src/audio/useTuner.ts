@@ -214,3 +214,6 @@ export function useTuner() {
     [reading, deviation, hasPitch, permission, mic.status, mic.error, mic.start, requestPermission]
   );
 }
+
+/** Shared microphone session, passed down to whichever screen is on top. */
+export type Tuner = ReturnType<typeof useTuner>;

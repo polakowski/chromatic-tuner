@@ -1,224 +1,65 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { useTuner } from '../audio/useTuner';
+import type { Tuner } from '../audio/useTuner';
+import { useStrings } from '../i18n/useStrings';
 import { findTuning } from '../music/tunings';
 import { useSettings } from '../state/settings';
 import { CentsBar } from './CentsBar';
+import { NoteDisplay } from './NoteDisplay';
 import { StringRow } from './StringRow';
 import { StrobeDisplay } from './StrobeDisplay';
-import { LevelMeter } from './LevelMeter';
-import { NoteDisplay } from './NoteDisplay';
-import { SettingsSheet } from './SettingsSheet';
-import { colors, spacing } from './theme';
+import { spacing } from './theme';
 
-export function TunerScreen() {
-  const { reading, deviation, hasPitch, permission, status, error, requestPermission, start } =
-    useTuner();
-  const referenceA = useSettings((state) => state.referenceA);
+interface TunerScreenProps {
+  tuner: Tuner;
+}
+
+export function TunerScreen({ tuner }: TunerScreenProps) {
+  const { reading, deviation, hasPitch } = tuner;
+  const t = useStrings();
   const indicator = useSettings((state) => state.indicator);
   const tuningId = useSettings((state) => state.tuningId);
+  const lockedString = useSettings((state) => state.lockedString);
+  const toggleLockedString = useSettings((state) => state.toggleLockedString);
   const tuning = findTuning(tuningId);
-  const [settingsVisible, setSettingsVisible] = useState(false);
-
-  // Na web pierwsze uruchomienie AudioContext wymaga gestu użytkownika.
-  const needsGesture = status === 'blocked' || status === 'error';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" />
+    <View style={styles.container}>
+      <NoteDisplay reading={reading} />
 
-      <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-          onPress={() => setSettingsVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={`Tuning: ${tuning ? tuning.name : 'Chromatic'}. Open settings.`}
-        >
-          <Text style={styles.chipValue}>{tuning ? tuning.name : 'Chromatic'}</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-          onPress={() => setSettingsVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={`Reference A is ${referenceA} hertz. Open settings.`}
-        >
-          <Text style={styles.chipLabel}>A</Text>
-          <Text style={styles.chipValue}>{referenceA.toFixed(1)}</Text>
-          <Text style={styles.chipUnit}>Hz</Text>
-        </Pressable>
+      <View style={styles.indicatorWrapper}>
+        {indicator === 'strobe' ? (
+          <StrobeDisplay deviation={deviation} hasPitch={hasPitch} />
+        ) : (
+          <CentsBar deviation={deviation} hasPitch={hasPitch} />
+        )}
       </View>
 
-      <View style={styles.content}>
-        {permission === 'denied' && (
-          <Prompt
-            title="Microphone access needed"
-            body="The tuner listens through the microphone. Grant access to continue."
-            action="Allow microphone"
-            onPress={() => void requestPermission()}
+      {tuning && (
+        <View style={styles.stringsWrapper}>
+          <StringRow
+            tuning={tuning}
+            activeIndex={reading.stringIndex}
+            cents={reading.cents}
+            markedIndex={lockedString}
+            markedLabel={t.tuner.pinned}
+            onPressString={toggleLockedString}
           />
-        )}
-
-        {permission === 'granted' && needsGesture && (
-          <Prompt
-            title="Ready to listen"
-            body="Browsers need a tap before they hand over the microphone."
-            action="Start tuner"
-            onPress={() => void start()}
-          />
-        )}
-
-        {(permission === 'pending' || (permission === 'granted' && !needsGesture)) && (
-          <>
-            <NoteDisplay reading={reading} />
-            <View style={styles.indicatorWrapper}>
-              {indicator === 'strobe' ? (
-                <StrobeDisplay deviation={deviation} hasPitch={hasPitch} />
-              ) : (
-                <CentsBar deviation={deviation} hasPitch={hasPitch} />
-              )}
-            </View>
-
-            {tuning && (
-              <View style={styles.stringsWrapper}>
-                <StringRow
-                  tuning={tuning}
-                  activeIndex={reading.stringIndex}
-                  cents={reading.cents}
-                />
-              </View>
-            )}
-          </>
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        {error ? <Text style={styles.error}>{error}</Text> : <LevelMeter level={reading.level} />}
-      </View>
-
-      <SettingsSheet visible={settingsVisible} onClose={() => setSettingsVisible(false)} />
-    </SafeAreaView>
-  );
-}
-
-interface PromptProps {
-  title: string;
-  body: string;
-  action: string;
-  onPress: () => void;
-}
-
-function Prompt({ title, body, action, onPress }: PromptProps) {
-  return (
-    <View style={styles.message}>
-      <Text style={styles.messageTitle}>{title}</Text>
-      <Text style={styles.messageBody}>{body}</Text>
-      <Pressable
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-        onPress={onPress}
-        accessibilityRole="button"
-      >
-        <Text style={styles.primaryButtonText}>{action}</Text>
-      </Pressable>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  chipLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  chipValue: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-    fontVariant: ['tabular-nums'],
-  },
-  chipUnit: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  content: {
-    flex: 1,
-    width: '100%',
-    // Na tablecie i w przeglądarce treść nie rozjeżdża się na całą szerokość.
-    maxWidth: 520,
-    alignSelf: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
   },
   indicatorWrapper: {
     marginTop: spacing.xl,
   },
   stringsWrapper: {
     marginTop: spacing.lg,
-  },
-  footer: {
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  message: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  messageTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  messageBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    color: colors.textMuted,
-  },
-  primaryButton: {
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 999,
-    backgroundColor: colors.accent,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.background,
-  },
-  error: {
-    fontSize: 12,
-    color: colors.offTune,
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.6,
   },
 });
