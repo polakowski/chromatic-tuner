@@ -37,7 +37,8 @@
           "enableBackgroundRecording": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-localization"
     ],
     "backgroundColor": "#0B0F14",
     "extra": {

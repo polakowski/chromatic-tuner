@@ -6,6 +6,7 @@ import { PitchAnalyzer } from '../dsp/analyzer';
 import { PitchSmoother } from '../dsp/smoothing';
 import { describeNote, type NoteName } from '../music/notes';
 import { frequencyToPitch } from '../music/pitch';
+import { findTuning, resolveTarget } from '../music/tunings';
 import { SENSITIVITY_THRESHOLDS, useSettings } from '../state/settings';
 import { useMicStream } from './micStream';
 import type { MicBuffer } from './micStream.types';
@@ -23,11 +24,19 @@ export interface TunerReading {
   /** Deviation from the nearest note in cents. */
   cents: number;
   note: NoteName | null;
+  /** Matched string of the active tuning, or null in chromatic mode. */
+  stringIndex: number | null;
   /** 0..1 input level, for the level meter. */
   level: number;
 }
 
-const SILENT_READING: TunerReading = { frequency: null, cents: 0, note: null, level: 0 };
+const SILENT_READING: TunerReading = {
+  frequency: null,
+  cents: 0,
+  note: null,
+  stringIndex: null,
+  level: 0,
+};
 
 function levelFromRms(rms: number): number {
   if (rms <= 0) {
@@ -114,17 +123,20 @@ export function useTuner() {
         return;
       }
 
-      const { referenceA, accidental } = useSettings.getState();
+      const { referenceA, accidental, tuningId, lockedString } = useSettings.getState();
       const pitch = frequencyToPitch(smoothed, referenceA);
-      deviation.setValue(pitch.cents);
+      const target = resolveTarget(pitch.exactMidi, findTuning(tuningId), lockedString);
+
+      deviation.setValue(target.cents);
       hasPitch.setValue(1);
 
       if (throttleElapsed) {
         lastReadingAtRef.current = now;
         setReading({
           frequency: smoothed,
-          cents: pitch.cents,
-          note: describeNote(pitch.midi, accidental),
+          cents: target.cents,
+          note: describeNote(target.midi, accidental),
+          stringIndex: target.stringIndex,
           level: levelFromRms(result.rms),
         });
       }
@@ -202,3 +214,6 @@ export function useTuner() {
     [reading, deviation, hasPitch, permission, mic.status, mic.error, mic.start, requestPermission]
   );
 }
+
+/** Shared microphone session, passed down to whichever screen is on top. */
+export type Tuner = ReturnType<typeof useTuner>;

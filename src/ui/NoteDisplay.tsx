@@ -1,21 +1,15 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { TunerReading } from '../audio/useTuner';
+import { useStrings } from '../i18n/useStrings';
 import { colors, IN_TUNE_CENTS, spacing, toneColor } from './theme';
 
 interface NoteDisplayProps {
   reading: TunerReading;
 }
 
-function formatCents(cents: number): string {
-  const rounded = Math.round(cents);
-  if (rounded === 0) {
-    return '0';
-  }
-  return rounded > 0 ? `+${rounded}` : `${rounded}`;
-}
-
 export function NoteDisplay({ reading }: NoteDisplayProps) {
+  const t = useStrings();
   const { note, frequency, cents } = reading;
   const hasPitch = note !== null && frequency !== null;
   const accent = hasPitch ? toneColor(cents) : colors.textMuted;
@@ -33,14 +27,14 @@ export function NoteDisplay({ reading }: NoteDisplayProps) {
       </View>
 
       <Text style={styles.frequency}>
-        {hasPitch ? `${frequency.toFixed(1)} Hz` : 'Play a note'}
+        {hasPitch ? `${frequency.toFixed(1)} Hz` : t.tuner.playNote}
       </Text>
 
       <Text style={[styles.cents, { color: accent }]}>
         {hasPitch
           ? Math.abs(cents) <= IN_TUNE_CENTS
-            ? 'In tune'
-            : `${formatCents(cents)} cents`
+            ? t.tuner.inTune
+            : t.tuner.cents(cents)
           : ' '}
       </Text>
     </View>

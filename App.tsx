@@ -1,5 +1,5 @@
-import { TunerScreen } from './src/ui/TunerScreen';
+import { AppShell } from './src/ui/AppShell';
 
 export default function App() {
-  return <TunerScreen />;
+  return <AppShell />;
 }
